@@ -10,14 +10,14 @@
 ## Source verification
 
 - `./script/check_open_source_readiness.sh`: passed.
-- `swift test -Xswiftc -warnings-as-errors`: 669 tests, 0 failures.
+- `swift test -Xswiftc -warnings-as-errors`: 671 tests, 0 failures.
 - `swift build -c release -Xswiftc -warnings-as-errors`: passed.
 - `bash -n script/*.sh`: passed.
 - `plutil -lint Resources/PrivacyInfo.xcprivacy config/*.entitlements`: passed.
 - GitHub YAML parsed with Ruby Psych: all workflow, issue-form, funding, and Dependabot files passed.
 - `gitleaks dir --redact --no-banner --no-color .`: approximately 81.15 MB, no pattern findings.
 - Public snapshot `gitleaks dir --redact --no-banner --no-color .`: required at the exact organization PR commit.
-- Clean `git archive` verification: readiness, all 669 strict tests, the warnings-as-errors release build, and exact-tree Gitleaks must pass from the exact public commit extraction.
+- Clean `git archive` verification: readiness, all 671 strict tests, the warnings-as-errors release build, and exact-tree Gitleaks must pass from the exact public commit extraction.
 - Public history inspection: the organization repository is seeded from a fresh source snapshot and must contain no legacy private commits or deleted objects.
 - Hosted Secret Scan and Release Gates results must be recorded from the exact organization PR rather than inherited from the legacy personal repository.
 - Official Apache-2.0 text comparison: byte-for-byte match.

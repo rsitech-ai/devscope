@@ -28,6 +28,9 @@ All notable changes to DevScope are documented here. The format follows
 
 ### Fixed
 
+- Blocking process waits and pipe drains no longer occupy Swift cooperative
+  executor workers, preserving timeout and cancellation behavior on constrained
+  hosted runners.
 - Recovery-cache payload limits now account for JSON escaping and reject oversized encoded metadata before writing, so every accepted save remains readable.
 - Sensitive HTTP header redaction now removes complete Digest, AWS signature, proxy-authorization, and cookie values.
 - Partial filesystem mutations now expose exact local recovery locations with Copy Path and Reveal in Finder actions.
