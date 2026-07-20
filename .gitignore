@@ -1,5 +1,40 @@
+# SwiftPM / Xcode
 .build/
 .swiftpm/
-dist/
 DerivedData/
+*.xcuserstate
+xcuserdata/
+*.xcresult
+
+# Local packaging output
+dist/
+
+# Python / tooling caches (scripts and checkers)
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage/
+htmlcov/
+
+# Local environment and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.mobileprovision
+*.cer
+*.certSigningRequest
+AuthKey_*.p8
+
+# Editor / OS / assistant local state
 .DS_Store
+.idea/
+.vscode/
+.cursor/
+.codex/
+.agents/
+*.swp
+*~
