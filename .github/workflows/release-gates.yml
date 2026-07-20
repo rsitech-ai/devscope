@@ -44,6 +44,15 @@ jobs:
       - name: Validate public-source readiness
         run: ./script/check_open_source_readiness.sh
 
+      - name: Verify process runner under constrained executor
+        env:
+          LIBDISPATCH_COOPERATIVE_POOL_STRICT: "1"
+        run: |
+          swift test -Xswiftc -warnings-as-errors \
+            --filter SystemAutomationCommandRunnerTests/testExecutionTimeoutTerminatesTheSpawnedProcessGroupAndFailsClosed
+          swift test -Xswiftc -warnings-as-errors \
+            --filter SystemAutomationCommandRunnerTests/testCancellationKillsPipeHoldingDescendantAfterLeaderExits
+
       - name: Run tests with warnings as errors
         run: swift test -Xswiftc -warnings-as-errors
 

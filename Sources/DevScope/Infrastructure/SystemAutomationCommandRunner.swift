@@ -108,13 +108,25 @@ actor SystemAutomationCommandRunner: AutomationCommandRunning {
       hooks.afterInstall?(spawned.pid)
 
       let outputTask = Task.detached {
-        try Self.drain(spawned.standardOutput, maximumCapturedBytes: self.maximumCapturedBytes)
+        try await Self.performBlocking {
+          try Self.drain(
+            spawned.standardOutput,
+            maximumCapturedBytes: self.maximumCapturedBytes
+          )
+        }
       }
       let errorTask = Task.detached {
-        try Self.drain(spawned.standardError, maximumCapturedBytes: self.maximumCapturedBytes)
+        try await Self.performBlocking {
+          try Self.drain(
+            spawned.standardError,
+            maximumCapturedBytes: self.maximumCapturedBytes
+          )
+        }
       }
       let leaderTask = Task.detached {
-        try Self.observeLeaderExitWithoutReaping(spawned.pid)
+        try await Self.performBlocking {
+          try Self.observeLeaderExitWithoutReaping(spawned.pid)
+        }
       }
       let timeoutTask = Task.detached { [executionTimeout] in
         do {
@@ -283,6 +295,16 @@ actor SystemAutomationCommandRunner: AutomationCommandRunning {
     terminated.append(nil)
     return terminated.withUnsafeMutableBufferPointer { buffer in
       body(buffer.baseAddress!)
+    }
+  }
+
+  nonisolated private static func performBlocking<Value: Sendable>(
+    _ operation: @escaping @Sendable () throws -> Value
+  ) async throws -> Value {
+    try await withCheckedThrowingContinuation { continuation in
+      DispatchQueue.global(qos: .utility).async {
+        continuation.resume(with: Result { try operation() })
+      }
     }
   }
 

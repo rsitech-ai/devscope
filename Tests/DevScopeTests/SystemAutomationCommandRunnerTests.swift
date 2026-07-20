@@ -179,7 +179,8 @@ final class SystemAutomationCommandRunnerTests: XCTestCase {
       ))
     }
 
-    XCTAssertEqual(leaderExited.wait(timeout: .now() + 5), .success)
+    let didObserveLeaderExit = await waitForSignal(leaderExited, timeout: .seconds(5))
+    XCTAssertTrue(didObserveLeaderExit)
     let descendantPID = try XCTUnwrap(readPID(from: pidFile))
     let fallback = cleanupFallback(processGroup)
     defer {
@@ -299,6 +300,19 @@ private func waitSynchronously(
   timeout: DispatchTime
 ) -> DispatchTimeoutResult {
   semaphore.wait(timeout: timeout)
+}
+
+private func waitForSignal(
+  _ semaphore: DispatchSemaphore,
+  timeout: Duration
+) async -> Bool {
+  let clock = ContinuousClock()
+  let deadline = clock.now.advanced(by: timeout)
+  while clock.now < deadline {
+    if waitSynchronously(semaphore, timeout: .now()) == .success { return true }
+    try? await Task.sleep(for: .milliseconds(10))
+  }
+  return waitSynchronously(semaphore, timeout: .now()) == .success
 }
 
 private func waitForPID(from url: URL, deadline: DispatchTime) -> pid_t? {
