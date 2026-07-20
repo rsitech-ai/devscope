@@ -27,7 +27,7 @@ packaging passes, but the sandbox product is not feature-equivalent.
 | Deterministic source gate | PASS | `script/check_open_source_readiness.sh` |
 | Public history and tree | PASS BY CONSTRUCTION | Canonical publication uses fresh history from the exact sanitized source archive; legacy private objects and author metadata are not transferred; exact-tree Gitleaks remains required |
 | Dependency declaration | PASS | Swift package dependency graph is empty; third-party notices and SBOM agree |
-| Strict test suite | PASS | 669 tests, 0 failures, warnings treated as errors |
+| Strict test suite | PASS | 671 tests, 0 failures, warnings treated as errors |
 | Strict release build | PASS | Production build completed with warnings treated as errors |
 | Exact development runtime | PASS | Exact staged bundle launched, matched to its running executable, and passed strict bundle-signature verification; Processes and Automations received a real UI smoke |
 | Universal full-access package | PASS (local) | `x86_64 arm64`, Apple Events entitlement, App Sandbox absent, signature/policy validation passed, license notices embedded |
@@ -37,7 +37,7 @@ packaging passes, but the sandbox product is not feature-equivalent.
 | Notarization | BLOCKED:EXTERNAL | No `devscope-notary` Keychain profile or equivalent App Store Connect credentials are configured |
 | Repository publication settings | OWNER ACTION | Verify public visibility, default-branch protection, private vulnerability reporting, and security settings after organization import |
 | Remote required checks | VERIFY ON PUBLIC PR | Record organization-run results; do not inherit the legacy personal repository's billing failure as code evidence |
-| Exact hardened-source archive | PASS (local) | The source tree passed readiness, 669 strict tests, warnings-as-errors release build, and exact-tree Gitleaks from a clean `git archive`; repeat from the exact public commit |
+| Exact hardened-source archive | PASS (local) | The source tree passed readiness, 671 strict tests, warnings-as-errors release build, and exact-tree Gitleaks from a clean `git archive`; repeat from the exact public commit |
 
 ## Log boundary
 

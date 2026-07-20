@@ -18,7 +18,7 @@
   },
   "tests": {
     "command": "swift test -Xswiftc -warnings-as-errors",
-    "executed": 669,
+    "executed": 671,
     "failures": 0
   },
   "sourcePublication": {
