@@ -7,7 +7,7 @@ The canonical public source is published through a fresh-history
 monetization work, and author metadata are not transferred.
 
 1. **Repository protections — Maintained.** Public visibility, pull-request
-   protection, required `Secret Scan` and `Release Gates` checks, private
+   protection, required `Full-history Gitleaks scan`, `macOS arm64`, and `macOS x86_64` checks, private
    vulnerability reporting, secret scanning, push protection, and Dependabot
    security updates are enabled on `rsitech-ai/devscope`. Re-verify after any
    organization policy change.
