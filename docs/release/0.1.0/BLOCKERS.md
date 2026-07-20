@@ -6,10 +6,11 @@ The canonical public source is published through a fresh-history
 `rsitech-ai/devscope` snapshot. Legacy private objects, internal audits,
 monetization work, and author metadata are not transferred.
 
-1. **Repository protections — Repository owner.** Keep pull-request protection,
-   private vulnerability reporting, dependency alerts, and available security
-   features enabled. Add required hosted checks when Actions billing permits
-   reliable execution.
+1. **Repository protections — Maintained.** Public visibility, pull-request
+   protection, required `Secret Scan` and `Release Gates` checks, private
+   vulnerability reporting, secret scanning, push protection, and Dependabot
+   security updates are enabled on `rsitech-ai/devscope`. Re-verify after any
+   organization policy change.
 2. **Public archive — Release owner.** Inspect the exact public commit archive and
    record the tag, source commit, checksum, and all limitations in release
    metadata.

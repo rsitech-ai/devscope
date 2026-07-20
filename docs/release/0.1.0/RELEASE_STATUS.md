@@ -35,8 +35,8 @@ packaging passes, but the sandbox product is not feature-equivalent.
 | Community prerelease | READY (unnotarized) | Explicit acknowledgement, ad-hoc signature disclosure, embedded trust warning, clean universal zip, and published SHA-256 required |
 | Developer ID identity | PASS (installed) | `Developer ID Application: Rafal Sikora (2NY8A789TN)` is available with its private key |
 | Notarization | BLOCKED:EXTERNAL | No `devscope-notary` Keychain profile or equivalent App Store Connect credentials are configured |
-| Repository publication settings | OWNER ACTION | Verify public visibility, default-branch protection, private vulnerability reporting, and security settings after organization import |
-| Remote required checks | VERIFY ON PUBLIC PR | Record organization-run results; do not inherit the legacy personal repository's billing failure as code evidence |
+| Repository publication settings | PASS | Public `rsitech-ai/devscope`; branch protection with required PR, conversation resolution, and admin enforcement; private vulnerability reporting enabled; secret scanning, push protection, and Dependabot security updates enabled |
+| Remote required checks | PASS | `Secret Scan` and `Release Gates` are required status checks on `main`; organization PR and main-branch workflow runs recorded green |
 | Exact hardened-source archive | PASS (local) | The source tree passed readiness, 671 strict tests, warnings-as-errors release build, and exact-tree Gitleaks from a clean `git archive`; repeat from the exact public commit |
 
 ## Log boundary

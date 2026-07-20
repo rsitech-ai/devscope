@@ -34,7 +34,11 @@
     "repositoryVisibilityChanged": true,
     "ownerSettingsVerified": true,
     "exactArchiveValidationPassed": true,
-    "hostedChecksStatus": "record-from-public-organization-pr"
+    "hostedChecksStatus": "required-secret-scan-and-release-gates-on-main",
+    "secretScanningEnabled": true,
+    "secretScanningPushProtectionEnabled": true,
+    "dependabotSecurityUpdatesEnabled": true,
+    "privateVulnerabilityReportingEnabled": true
   },
   "artifacts": [
     {
