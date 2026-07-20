@@ -1,0 +1,73 @@
+name: Release Gates
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-gates-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  macos:
+    name: macOS ${{ matrix.architecture }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-26
+            architecture: arm64
+          - runner: macos-26-intel
+            architecture: x86_64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Record Apple toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+
+      - name: Validate shell scripts
+        run: bash -n script/*.sh
+
+      - name: Validate public-source readiness
+        run: ./script/check_open_source_readiness.sh
+
+      - name: Run tests with warnings as errors
+        run: swift test -Xswiftc -warnings-as-errors
+
+      - name: Build Release with warnings as errors
+        run: swift build -c release -Xswiftc -warnings-as-errors
+
+      - name: Build and validate sandbox release bundle
+        env:
+          DEVSCOPE_DIST_DIR: ${{ runner.temp }}/devscope-release
+        run: |
+          app_path="$(./script/build_release_bundle.sh)"
+          DEVSCOPE_REQUIRE_SANDBOX=1 ./script/validate_release_bundle.sh "$app_path"
+          file "$app_path/Contents/MacOS/DevScope"
+
+      - name: Build and validate full-access release bundle
+        env:
+          DEVSCOPE_DIST_DIR: ${{ runner.temp }}/devscope-full-access
+          DEVSCOPE_ENTITLEMENTS: ${{ github.workspace }}/config/DevScopeDeveloperID.entitlements
+        run: |
+          app_path="$(./script/build_release_bundle.sh)"
+          DEVSCOPE_REQUIRE_SANDBOX=0 \
+          DEVSCOPE_REQUIRE_APPLE_EVENTS=1 \
+          ./script/validate_release_bundle.sh "$app_path"
+          file "$app_path/Contents/MacOS/DevScope"
+
+      - name: Verify tracked files stayed clean
+        run: git diff --exit-code
