@@ -1,0 +1,10 @@
+# Default owner and security-sensitive release surfaces.
+* @s1korrrr
+/Sources/DevScopeCore/ @s1korrrr
+/Sources/DevScope/Infrastructure/ @s1korrrr
+/Sources/DevScope/Stores/ @s1korrrr
+/config/ @s1korrrr
+/script/ @s1korrrr
+/.github/workflows/ @s1korrrr
+/SECURITY.md @s1korrrr
+/PRIVACY.md @s1korrrr

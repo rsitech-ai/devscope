@@ -1,0 +1,33 @@
+{
+  "spdxVersion": "SPDX-2.3",
+  "dataLicense": "CC0-1.0",
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "name": "DevScope-0.1.0-source",
+  "documentNamespace": "https://github.com/rsitech-ai/devscope/sbom/devscope-0.1.0-source-20260720",
+  "creationInfo": {
+    "created": "2026-07-17T19:50:00Z",
+    "creators": [
+      "Tool: DevScope open-source readiness process"
+    ]
+  },
+  "packages": [
+    {
+      "name": "DevScope",
+      "SPDXID": "SPDXRef-Package-DevScope",
+      "versionInfo": "0.1.0",
+      "downloadLocation": "https://github.com/rsitech-ai/devscope",
+      "filesAnalyzed": false,
+      "licenseConcluded": "Apache-2.0",
+      "licenseDeclared": "Apache-2.0",
+      "copyrightText": "Copyright 2026 Rafal Sikora",
+      "primaryPackagePurpose": "APPLICATION"
+    }
+  ],
+  "relationships": [
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-DevScope"
+    }
+  ]
+}

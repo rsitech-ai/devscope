@@ -1,0 +1,19 @@
+title = "DevScope Gitleaks configuration"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Synthetic credential-redaction fixtures in security regression tests"
+condition = "AND"
+regexTarget = "line"
+targetRules = ["curl-auth-header", "curl-auth-user"]
+paths = [
+  '''(^|/)Tests/DevScopeCoreTests/ProcessPresentationTests\.swift$''',
+  '''(^|/)Tests/DevScopeCoreTests/AutomationManagerTests\.swift$''',
+]
+regexes = [
+  '''SYNTH_[A-Z0-9_]+''',
+  '''curl\s+(?:-u|--user)\s+(?:'user:curl secret'|user:curlsecret|user:curl --header-shaped secret;stillsecret)''',
+  '''Authorization: secret-value''',
+]

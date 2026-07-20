@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 3,
+  "product": "DevScope",
+  "copyrightOwner": "Rafal Sikora",
+  "publicMaintainer": "RSI Tech",
+  "website": "https://rsitech.ai",
+  "contact": "info@rsitech.ai",
+  "platform": "macOS",
+  "version": "0.1.0",
+  "build": "1",
+  "date": "2026-07-20",
+  "verdict": "SOURCE_PUBLICATION_APPROVED_COMMUNITY_PREVIEW_PRODUCTION_BINARY_BLOCKED",
+  "source": {
+    "integratedBranch": "main",
+    "auditedProductBaseline": "e8f3f973dcb94f83c89ba73bbde600bc7c920e1e",
+    "exactPublicationCommit": null,
+    "exactPublicationCommitStatus": "record-in-public-release-metadata"
+  },
+  "tests": {
+    "command": "swift test -Xswiftc -warnings-as-errors",
+    "executed": 669,
+    "failures": 0
+  },
+  "sourcePublication": {
+    "technicalBuildAndTestGatesPassed": true,
+    "publicationBlocked": false,
+    "canonicalRepository": "https://github.com/rsitech-ai/devscope",
+    "freshHistoryPublication": true,
+    "legacyHistoryIncluded": false,
+    "secretFindings": 0,
+    "visualHistoryPrivacyClear": true,
+    "dependencyCount": 0,
+    "license": "Apache-2.0",
+    "repositoryVisibilityChanged": true,
+    "ownerSettingsVerified": true,
+    "exactArchiveValidationPassed": true,
+    "hostedChecksStatus": "record-from-public-organization-pr"
+  },
+  "artifacts": [
+    {
+      "role": "local-full-feature-validation",
+      "distribution": "local-ad-hoc-full-access",
+      "architectures": ["x86_64", "arm64"],
+      "bundleIdentifier": "com.s1korrrr.DevScope",
+      "signature": "ad-hoc",
+      "executableSHA256": null,
+      "digestStatus": "record-from-exact-final-artifact",
+      "validated": true,
+      "licenseNoticesEmbedded": true,
+      "productionDistributable": false
+    },
+    {
+      "role": "sandbox-compatibility-validation",
+      "distribution": "local-ad-hoc-sandbox",
+      "architectures": ["x86_64", "arm64"],
+      "bundleIdentifier": "com.s1korrrr.DevScope",
+      "signature": "ad-hoc",
+      "executableSHA256": null,
+      "digestStatus": "record-from-exact-final-artifact",
+      "validated": true,
+      "licenseNoticesEmbedded": true,
+      "fullFeatureParity": false,
+      "productionDistributable": false
+    }
+  ],
+  "communityPreview": {
+    "status": "AD_HOC_SIGNED_UNNOTARIZED_PRERELEASE",
+    "architectures": ["x86_64", "arm64"],
+    "trustWarningEmbedded": true,
+    "sha256Published": true,
+    "productionDistributable": false
+  },
+  "publicBinaryDistribution": {
+    "status": "BLOCKED_EXTERNAL_NOTARIZATION",
+    "developerIDIdentity": "Developer ID Application: Rafal Sikora (2NY8A789TN)",
+    "developerIDIdentityAvailable": true,
+    "notaryKeychainProfileAvailable": false,
+    "developerIDSigned": false,
+    "notarized": false,
+    "stapled": false,
+    "gatekeeperApproved": false
+  },
+  "upload": {
+    "appStoreValidated": false,
+    "testFlightUploaded": false,
+    "submittedForReview": false
+  }
+}

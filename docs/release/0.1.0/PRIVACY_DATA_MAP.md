@@ -1,0 +1,19 @@
+# Privacy Data Map
+
+DevScope has no repository evidence of network transmission, accounts, analytics, advertising, tracking, third-party SDKs, or backend storage. The final App Store declaration still requires owner confirmation and must not be inferred solely from code.
+
+| Data | Source | Purpose | Storage/retention | Deletion | Recipient/tracking/linkage |
+|---|---|---|---|---|---|
+| Process PID, parent PID, executable, command, CWD, resource metrics | Local macOS process APIs, `ps`, `lsof`, `ioreg` | Local process inspection and grouping | Primarily in memory; history window about 2 minutes | Cleared on app exit/history rollover | No recipient observed; no tracking; not account-linked |
+| Favorite/watch identity | User action plus process identity | Restore local categorization | UserDefaults as SHA-256-derived `v2:` keys | User can remove category; legacy raw keys are migrated to hashes on launch | Local only; not account-linked |
+| Recovery copy | Explicit copy/export action | Restore last redacted copy | Local Application Support file, bounded to 2 MB, mode 0600 | Replaced by subsequent copy; app has no dedicated clear UI | Local only; not tracking |
+| Clipboard content | Explicit copy/export action | User-requested transfer | macOS general pasteboard retention | Controlled by OS/user/next clipboard owner | Other local apps may read pasteboard |
+| Apple Foundation Models prompts/results | Optional local naming feature | Improve display labels/workflow notes | In-memory cache | App lifecycle/cache eviction | Apple on-device framework; owner must confirm intended disclosure wording |
+| UserDefaults settings | User choices | UI preferences | Local until app data removal | Change setting or remove app data | Local only |
+| Automation definitions and provenance | Local launchd property lists, current-user crontab, Login Items/Background Items system diagnostics | Detect, classify, correlate, and locally manage approved user-owned automations | Inventory is primarily in memory; source diagnostics are reduced to health text/fingerprints | Cleared on refresh/app exit; original definitions remain under macOS/user control | Local only; no recipient or account linkage |
+| Automation recovery backups and manifests | Explicit confirmed mutation of a user-owned automation | Conflict-safe rollback and manual restoration | Local Application Support, owner-only 0600 files under a 0700 directory, bounded by count/age | Pruned by bounded retention, successful recovery cleanup, or exact user/audit cleanup | Local only; may contain the original local automation command/environment |
+| Automation notification state | Locally observed strong process links and verified state transitions | Optional long-running, unexpected-exit, and repeated-failure notifications | Transition state in memory; opt-in settings in UserDefaults | Cleared on app exit or setting removal | Delivered through local macOS notifications only |
+
+Privacy manifest declares UserDefaults required-reason API category with reason `CA92.1`. No ATT use was found. The repository now includes the public-source policy in `PRIVACY.md`; its GitHub URL becomes usable after source publication. A separately hosted URL and in-app policy link remain App Store/product-owner decisions. The owner must still confirm privacy labels, retention promises, local Foundation Models wording, support contact, and any operational telemetry not represented in this repository.
+
+The 2026-07-14 macOS 27 automation audit found no network transmission, telemetry, new third-party dependency, privileged helper, or secret logging in the automation engine. Raw current-user crontab content was kept out of committed evidence; only its checksum and result state are recorded. Redacted export is the default, and explicit unredacted output is restricted to owner-only permissions.

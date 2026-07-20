@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "project": "DevScope",
+  "license": "Apache-2.0",
+  "copyrightOwner": "Rafal Sikora",
+  "publicMaintainer": "RSI Tech",
+  "website": "https://rsitech.ai",
+  "contact": "info@rsitech.ai",
+  "sourcePublication": {
+    "status": "canonical-fresh-history-organization-repository",
+    "publicationBlocked": false,
+    "canonicalRepository": "https://github.com/rsitech-ai/devscope",
+    "legacyHistoryIncluded": false,
+    "checker": "script/check_open_source_readiness.sh",
+    "requiresOwnerVisibilityChange": false
+  },
+  "productionDistribution": {
+    "fullFeatureRoute": "developer-id-direct-download",
+    "status": "blocked-external-notarization",
+    "communityPreview": "available-ad-hoc-signed-unnotarized-prerelease",
+    "sandboxFeatureParity": false
+  },
+  "dependencies": [],
+  "sbom": "docs/open-source/SBOM.spdx.json",
+  "security": {
+    "privateReportingDocumented": true,
+    "historySecretScanRequired": true,
+    "historySecretScanWorkflow": ".github/workflows/secret-scan.yml",
+    "githubActionsPinnedToFullCommitSHA": true,
+    "historicalPrivacyReviewRequired": true,
+    "historicalPrivacyReviewStatus": "legacy-history-excluded-by-fresh-publication"
+  }
+}
