@@ -34,7 +34,7 @@
     "repositoryVisibilityChanged": true,
     "ownerSettingsVerified": true,
     "exactArchiveValidationPassed": true,
-    "hostedChecksStatus": "required-secret-scan-and-release-gates-on-main",
+    "hostedChecksStatus": "required-full-history-gitleaks-scan-macos-arm64-macos-x86_64",
     "secretScanningEnabled": true,
     "secretScanningPushProtectionEnabled": true,
     "dependabotSecurityUpdatesEnabled": true,

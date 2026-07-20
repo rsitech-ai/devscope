@@ -36,7 +36,7 @@ packaging passes, but the sandbox product is not feature-equivalent.
 | Developer ID identity | PASS (installed) | `Developer ID Application: Rafal Sikora (2NY8A789TN)` is available with its private key |
 | Notarization | BLOCKED:EXTERNAL | No `devscope-notary` Keychain profile or equivalent App Store Connect credentials are configured |
 | Repository publication settings | PASS | Public `rsitech-ai/devscope`; branch protection with required PR, conversation resolution, and admin enforcement; private vulnerability reporting enabled; secret scanning, push protection, and Dependabot security updates enabled |
-| Remote required checks | PASS | `Secret Scan` and `Release Gates` are required status checks on `main`; organization PR and main-branch workflow runs recorded green |
+| Remote required checks | PASS | Required status checks on `main` are `Full-history Gitleaks scan`, `macOS arm64`, and `macOS x86_64` (Secret Scan and Release Gates workflows); organization PR and main-branch workflow runs recorded green |
 | Exact hardened-source archive | PASS (local) | The source tree passed readiness, 671 strict tests, warnings-as-errors release build, and exact-tree Gitleaks from a clean `git archive`; repeat from the exact public commit |
 
 ## Log boundary
