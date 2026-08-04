@@ -576,6 +576,54 @@ final class ProcessPresentationTests: XCTestCase {
     XCTAssertEqual(family.descendantCount, 2)
   }
 
+  func testLiveScopedTreeInputsDropGracePeriodGhosts() {
+    let liveRoot = DevProcess(
+      pid: 10,
+      parentPID: 1,
+      executable: "npm",
+      command: "npm run dev",
+      birthToken: ProcessBirthToken(seconds: 100, microseconds: 0)
+    )
+    let liveChild = DevProcess(
+      pid: 11,
+      parentPID: 10,
+      executable: "node",
+      command: "node next",
+      birthToken: ProcessBirthToken(seconds: 101, microseconds: 0)
+    )
+    let ghostChild = DevProcess(
+      pid: 12,
+      parentPID: 10,
+      executable: "node",
+      command: "node worker",
+      birthToken: ProcessBirthToken(seconds: 102, microseconds: 0)
+    )
+    let processes = [liveRoot, liveChild, ghostChild]
+    let classified = processes.map { process in
+      ClassifiedDevProcess(
+        process: process,
+        classification: DevProcessClassification(
+          kind: .javascript,
+          displayName: process.executableName,
+          projectHint: nil,
+          tags: []
+        )
+      )
+    }
+
+    let live = ProcessPresentation.liveScopedTreeInputs(
+      processes: processes,
+      classifiedProcesses: classified,
+      liveProcessIDs: [10, 11]
+    )
+    let family = ProcessPresentation.familySummary(for: liveRoot, in: live.processes)
+
+    XCTAssertEqual(live.processes.map(\.pid), [10, 11])
+    XCTAssertEqual(live.classifiedProcesses.map(\.process.pid), [10, 11])
+    XCTAssertEqual(family.childCount, 1)
+    XCTAssertEqual(family.descendantCount, 1)
+  }
+
   func testBuildsDashboardStatsForVisibleProcesses() {
     let totalItems = [
       classified(
