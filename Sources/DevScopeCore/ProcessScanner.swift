@@ -184,14 +184,50 @@ public enum ProcessScanner {
   }
 
   public static func parseLsofCurrentDirectories(_ output: String) -> [Int32: String] {
+    parseLsofCurrentDirectories(Data(output.utf8))
+  }
+
+  /// Parses `lsof -F` field output. Prefer NUL-terminated fields (`-F …0`): a CWD path
+  /// may legally contain newlines on APFS, which would otherwise inject fake `p`/`n` records.
+  public static func parseLsofCurrentDirectories(_ output: Data) -> [Int32: String] {
     var currentPID: Int32?
     var result: [Int32: String] = [:]
+    let usesNUL = output.contains(0)
+    let separator: UInt8 = usesNUL ? 0 : UInt8(ascii: "\n")
+    let rawFields: [Data.SubSequence] = output.split(
+      separator: separator,
+      omittingEmptySubsequences: !usesNUL
+    )
 
-    for line in output.split(separator: "\n", omittingEmptySubsequences: true) {
-      if line.hasPrefix("p") {
-        currentPID = Int32(line.dropFirst())
-      } else if line.hasPrefix("n"), let currentPID {
-        result[currentPID] = String(line.dropFirst())
+    for rawField in rawFields {
+      var field = Data(rawField)
+      while field.first == UInt8(ascii: "\n") || field.first == UInt8(ascii: "\r") {
+        field.removeFirst()
+      }
+      guard let type = field.first else { continue }
+      let value = field.dropFirst()
+      switch type {
+      case UInt8(ascii: "p"):
+        if let text = String(data: Data(value), encoding: .utf8),
+           let pid = Int32(text)
+        {
+          currentPID = pid
+        } else {
+          currentPID = nil
+        }
+      case UInt8(ascii: "n"):
+        if let currentPID,
+           let path = String(data: Data(value), encoding: .utf8),
+           !path.isEmpty
+        {
+          // Legacy NL mode cannot represent newline-bearing paths safely; drop them.
+          if !usesNUL, path.contains(where: \.isNewline) {
+            continue
+          }
+          result[currentPID] = path
+        }
+      default:
+        continue
       }
     }
 
@@ -372,7 +408,8 @@ public final class SystemProcessScanner: @unchecked Sendable, ProcessProviding {
     do {
       result = try commandRunner.run(
         executableURL: URL(fileURLWithPath: "/usr/sbin/lsof"),
-        arguments: ["-a", "-d", "cwd", "-n", "-w", "-F", "pcn"]
+        // `-F pcn0`: NUL field terminators so CWD paths may contain newlines safely.
+        arguments: ["-a", "-d", "cwd", "-n", "-w", "-F", "pcn0"]
       )
     } catch {
       return [:]
@@ -382,9 +419,7 @@ public final class SystemProcessScanner: @unchecked Sendable, ProcessProviding {
       return [:]
     }
 
-    return ProcessScanner.parseLsofCurrentDirectories(
-      String(decoding: result.standardOutput, as: UTF8.self)
-    )
+    return ProcessScanner.parseLsofCurrentDirectories(result.standardOutput)
   }
 }
 

@@ -348,4 +348,64 @@ final class CronAutomationSourceTests: XCTestCase {
       XCTAssertTrue(snapshot.records.isEmpty)
     }
   }
+
+  func testMutationProbeAcceptsIdempotentRewrite() async {
+    let document = Data("0 * * * * /bin/true\n".utf8)
+    let runner = ScriptedAutomationCommandRunner(results: [
+      AutomationCommandResult(status: 0, standardOutput: document, standardError: Data()),
+      AutomationCommandResult(status: 0, standardOutput: Data(), standardError: Data()),
+      AutomationCommandResult(status: 0, standardOutput: document, standardError: Data()),
+    ])
+
+    let verified = await CrontabMutationProbe.verifyWriteReadback(
+      currentUsername: "ExampleUser",
+      run: { try await runner.run($0) }
+    )
+
+    XCTAssertTrue(verified)
+    XCTAssertEqual(runner.invocations.count, 3)
+    XCTAssertEqual(runner.invocations[0].arguments, ["-l"])
+    XCTAssertEqual(runner.invocations[1].arguments.count, 1)
+    XCTAssertTrue(runner.invocations[1].arguments[0].contains("devscope-crontab-probe-"))
+    XCTAssertEqual(runner.invocations[2].arguments, ["-l"])
+  }
+
+  func testMutationProbeFailsClosedWhenInstallIsRejected() async {
+    let document = Data("0 * * * * /bin/true\n".utf8)
+    let runner = ScriptedAutomationCommandRunner(results: [
+      AutomationCommandResult(status: 0, standardOutput: document, standardError: Data()),
+      AutomationCommandResult(
+        status: 1,
+        standardOutput: Data(),
+        standardError: Data("crontab: temporary failure\n".utf8)
+      ),
+    ])
+
+    let verified = await CrontabMutationProbe.verifyWriteReadback(
+      currentUsername: "ExampleUser",
+      run: { try await runner.run($0) }
+    )
+
+    XCTAssertFalse(verified)
+  }
+}
+
+private final class ScriptedAutomationCommandRunner: AutomationCommandRunning, @unchecked Sendable {
+  private let lock = NSLock()
+  private var remaining: [AutomationCommandResult]
+  private(set) var invocations: [AutomationCommand] = []
+
+  init(results: [AutomationCommandResult]) {
+    remaining = results
+  }
+
+  func run(_ command: AutomationCommand) async throws -> AutomationCommandResult {
+    lock.withLock {
+      invocations.append(command)
+      guard !remaining.isEmpty else {
+        return AutomationCommandResult(status: 1, standardOutput: Data(), standardError: Data())
+      }
+      return remaining.removeFirst()
+    }
+  }
 }
