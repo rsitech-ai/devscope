@@ -166,6 +166,30 @@ final class AutomationCapabilityPolicyTests: XCTestCase {
     )
   }
 
+  func testCronWithoutVerifiedWriteReadbackKeepsMutationUnavailable() {
+    let cronRecord = automationRecord(
+      copying: Fixtures.userAgent,
+      kind: .cron,
+      sourceKind: .crontab,
+      sourceURL: nil
+    )
+    let decision = AutomationCapabilityPolicy.decision(
+      for: cronRecord,
+      context: .fixture(
+        currentUID: 501,
+        canonicalPathIsApproved: true,
+        ownerUID: 501,
+        mutableSourceVerified: false
+      )
+    )
+
+    XCTAssertEqual(decision.capabilities, [.exportRecord, .startNow, .stopCurrentRun])
+    XCTAssertEqual(
+      decision.reason,
+      "Current-user crontab write/readback could not be verified on this Mac."
+    )
+  }
+
   func testExportAvailabilityIsGatedConsistentlyAndSurvivesPartialMutationAdapters() {
     let protected = AutomationCapabilityPolicy.decision(
       for: copyRecord(Fixtures.userAgent, ownership: .managed),

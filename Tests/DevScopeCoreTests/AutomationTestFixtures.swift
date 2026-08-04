@@ -850,7 +850,8 @@ extension AutomationCapabilityContext {
     ownerUID: uid_t?,
     isSymlink: Bool = false,
     isManaged: Bool = false,
-    implementedCapabilities: Set<AutomationCapability> = Set(AutomationCapability.allCases)
+    implementedCapabilities: Set<AutomationCapability> = Set(AutomationCapability.allCases),
+    mutableSourceVerified: Bool = true
   ) -> Self {
     Self(
       currentUID: currentUID,
@@ -858,7 +859,8 @@ extension AutomationCapabilityContext {
       sourceOwnerUID: ownerUID,
       isSymlink: isSymlink,
       isManaged: isManaged,
-      implementedCapabilities: implementedCapabilities
+      implementedCapabilities: implementedCapabilities,
+      mutableSourceVerified: mutableSourceVerified
     )
   }
 }

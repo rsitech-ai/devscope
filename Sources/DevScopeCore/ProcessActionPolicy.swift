@@ -19,6 +19,16 @@ public enum ProcessActionPolicy {
   private static let protectedExecutables: Set<String> = [
     "kernel_task", "launchd", "loginwindow", "WindowServer", "runningboardd",
     "securityd", "tccd", "opendirectoryd", "powerd",
+    // Session-critical GUI / preference / audio agents (basename match).
+    "Finder", "Dock", "SystemUIServer", "cfprefsd", "distnoted",
+    "UserEventAgent", "coreaudiod",
+  ]
+
+  /// Path prefixes for session-critical Apple infrastructure. Basename-only matching
+  /// misses renamed or nested CoreServices / libexec helpers.
+  private static let protectedPathPrefixes = [
+    "/System/Library/CoreServices/",
+    "/usr/libexec/",
   ]
 
   public static func decision(
@@ -32,9 +42,16 @@ public enum ProcessActionPolicy {
     if process.pid == 0 || process.pid == 1 || process.executableName == "launchd" {
       return .protected(reason: "macOS launch infrastructure is protected")
     }
-    if protectedExecutables.contains(process.executableName) {
+    if protectedExecutables.contains(process.executableName)
+      || isProtectedSystemPath(process.executable)
+    {
       return .protected(reason: "Critical macOS system infrastructure is protected")
     }
     return .allowed
+  }
+
+  private static func isProtectedSystemPath(_ executable: String) -> Bool {
+    let path = URL(fileURLWithPath: executable).standardizedFileURL.path
+    return protectedPathPrefixes.contains { path.hasPrefix($0) }
   }
 }

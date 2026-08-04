@@ -25,6 +25,10 @@ final class BoundedSystemCommandRunnerTests: XCTestCase {
     XCTAssertEqual(snapshot.map(\.pid), [42])
     XCTAssertEqual(snapshot.first?.currentDirectory, "/var/tmp")
     XCTAssertEqual(runner.requests.map(\.executablePath), ["/bin/ps", "/usr/sbin/lsof"])
+    XCTAssertEqual(
+      runner.requests.last?.arguments,
+      ["-a", "-d", "cwd", "-n", "-w", "-F", "pcn0"]
+    )
   }
 
   func testGPUMetricProviderRoutesIORegThroughTheBoundedRunner() throws {

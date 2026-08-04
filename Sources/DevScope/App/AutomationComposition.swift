@@ -89,14 +89,41 @@ enum DevScopeComposition {
       launchAgentsRoot: launchAgentsRoot,
       transactionRoot: transactionRoot
     )
+    let cronUsername = currentUsername(for: currentUID)
+    let crontabProbe = CachedCrontabMutationProbe(
+      currentUsername: cronUsername,
+      run: { command in
+        try await runner.run(command)
+      }
+    )
     let manager = AutomationManager(
       fileSystem: fileSystem,
       executor: executor,
       capabilityContext: { record in
-        try authority.context(for: record)
+        let context = try authority.context(for: record)
+        guard record.sourceKind == .crontab else { return context }
+        return AutomationCapabilityContext(
+          currentUID: context.currentUID,
+          canonicalPathIsApproved: context.canonicalPathIsApproved,
+          sourceOwnerUID: context.sourceOwnerUID,
+          isSymlink: context.isSymlink,
+          isManaged: context.isManaged,
+          implementedCapabilities: context.implementedCapabilities,
+          mutableSourceVerified: crontabProbe.cachedFailClosed()
+        )
       },
       destinationContext: { record, destination in
-        try authority.context(for: record, destination: destination)
+        let context = try authority.context(for: record, destination: destination)
+        guard record.sourceKind == .crontab else { return context }
+        return AutomationCapabilityContext(
+          currentUID: context.currentUID,
+          canonicalPathIsApproved: context.canonicalPathIsApproved,
+          sourceOwnerUID: context.sourceOwnerUID,
+          isSymlink: context.isSymlink,
+          isManaged: context.isManaged,
+          implementedCapabilities: context.implementedCapabilities,
+          mutableSourceVerified: crontabProbe.cachedFailClosed()
+        )
       },
       recoverableSource: { record in
         try await recoverableSources.capture(record)
@@ -117,7 +144,10 @@ enum DevScopeComposition {
         inventoryService: inventoryService,
         manager: manager,
         capabilityDecisionProvider: AutomationAuthorityCapabilityDecisionProvider(
-          authority: authority
+          authority: authority,
+          crontabMutationVerified: {
+            await crontabProbe.verified()
+          }
         ),
         destinationProvider: AutomationManagementDestinationProvider(
           transactionRoot: transactionRoot

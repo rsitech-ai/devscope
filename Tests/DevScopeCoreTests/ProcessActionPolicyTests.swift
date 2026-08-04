@@ -67,6 +67,39 @@ final class ProcessActionPolicyTests: XCTestCase {
     )
   }
 
+  func testProtectsSessionCriticalFinderAndDock() {
+    for executable in [
+      "/System/Library/CoreServices/Finder.app/Contents/MacOS/Finder",
+      "/System/Library/CoreServices/Dock.app/Contents/MacOS/Dock",
+      "/System/Library/CoreServices/SystemUIServer.app/Contents/MacOS/SystemUIServer",
+      "/usr/sbin/cfprefsd",
+      "/usr/sbin/distnoted",
+      "/usr/libexec/UserEventAgent",
+      "/usr/sbin/coreaudiod",
+    ] {
+      let item = classified(pid: 4200, executable: executable, kind: .other)
+      let decision = ProcessActionPolicy.decision(for: item, currentProcessID: 9000)
+      XCTAssertFalse(decision.isAllowed, executable)
+      XCTAssertEqual(decision.reason, "Critical macOS system infrastructure is protected")
+    }
+  }
+
+  func testProtectsCoreServicesAndLibexecPathsEvenWithUnknownBasenames() {
+    let coreServices = classified(
+      pid: 4200,
+      executable: "/System/Library/CoreServices/SomeHelper",
+      kind: .other
+    )
+    let libexec = classified(
+      pid: 4201,
+      executable: "/usr/libexec/custom_session_helper",
+      kind: .other
+    )
+
+    XCTAssertFalse(ProcessActionPolicy.decision(for: coreServices, currentProcessID: 9000).isAllowed)
+    XCTAssertFalse(ProcessActionPolicy.decision(for: libexec, currentProcessID: 9000).isAllowed)
+  }
+
   private func classified(pid: Int32, executable: String, kind: DevRuntimeKind)
     -> ClassifiedDevProcess
   {

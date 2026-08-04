@@ -316,6 +316,31 @@ final class SystemProcessScannerTests: XCTestCase {
     XCTAssertEqual(directories[12176], "/Users/example/dev/sample-service")
   }
 
+  func testParsesNULTerminatedLsofCurrentDirectoriesWithEmbeddedNewlines() {
+    var output = Data()
+    for field in [
+      "p12175",
+      "czsh",
+      "\nfcwd",
+      "n/Users/example/with\nnewline/project",
+      "\np12176",
+      "cnode",
+      "\nfcwd",
+      "n/Users/example/safe",
+      "\n",
+    ] {
+      output.append(contentsOf: Array(field.utf8))
+      if field != "\n" {
+        output.append(0)
+      }
+    }
+
+    let directories = ProcessScanner.parseLsofCurrentDirectories(output)
+
+    XCTAssertEqual(directories[12175], "/Users/example/with\nnewline/project")
+    XCTAssertEqual(directories[12176], "/Users/example/safe")
+  }
+
   func testMergesNativeExecutablePathWhenPSExecutableIsTruncated() {
     let birthToken = ProcessBirthToken(seconds: 1_000, microseconds: 321)
     let psProcess = DevProcess(

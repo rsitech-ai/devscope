@@ -444,7 +444,7 @@ public struct CronAutomationSource: AutomationSource {
     )
   }
 
-  private static func isNoCrontabDiagnostic(
+  static func isNoCrontabDiagnostic(
     _ data: Data,
     currentUsername: String
   ) -> Bool {
@@ -457,5 +457,84 @@ public struct CronAutomationSource: AutomationSource {
     return diagnostic == expected
       || diagnostic == expected + "\n"
       || diagnostic == expected + "\r\n"
+  }
+}
+
+/// Idempotent write/readback probe for current-user crontab mutation support.
+/// Aligns capability advertising with `SECURITY_STATUS` residual automation risk.
+public enum CrontabMutationProbe {
+  public static func verifyWriteReadback(
+    currentUsername: String,
+    run: (AutomationCommand) async throws -> AutomationCommandResult
+  ) async -> Bool {
+    do {
+      let listed = try await run(AutomationCommand(
+        executable: "/usr/bin/crontab",
+        arguments: ["-l"],
+        environment: ["LC_ALL": "C"]
+      ))
+
+      let hadNoCrontab: Bool
+      let document: Data
+      if listed.status == 0 {
+        hadNoCrontab = false
+        document = listed.standardOutput
+      } else if listed.status == 1,
+                listed.standardOutput.isEmpty,
+                CronAutomationSource.isNoCrontabDiagnostic(
+                  listed.standardError,
+                  currentUsername: currentUsername
+                )
+      {
+        hadNoCrontab = true
+        document = Data()
+      } else {
+        return false
+      }
+
+      let staged = FileManager.default.temporaryDirectory
+        .appendingPathComponent("devscope-crontab-probe-\(UUID().uuidString)")
+      defer { try? FileManager.default.removeItem(at: staged) }
+      try document.write(to: staged, options: .atomic)
+
+      let installed = try await run(AutomationCommand(
+        executable: "/usr/bin/crontab",
+        arguments: [staged.path],
+        environment: ["LC_ALL": "C"]
+      ))
+      guard installed.status == 0 else { return false }
+
+      if hadNoCrontab {
+        // Restore absence: empty install may create a crontab document.
+        let removed = try await run(AutomationCommand(
+          executable: "/usr/bin/crontab",
+          arguments: ["-r"],
+          environment: ["LC_ALL": "C"]
+        ))
+        if removed.status == 0 { return true }
+        let again = try await run(AutomationCommand(
+          executable: "/usr/bin/crontab",
+          arguments: ["-l"],
+          environment: ["LC_ALL": "C"]
+        ))
+        return again.status == 1
+          && again.standardOutput.isEmpty
+          && CronAutomationSource.isNoCrontabDiagnostic(
+            again.standardError,
+            currentUsername: currentUsername
+          )
+      }
+
+      let verified = try await run(AutomationCommand(
+        executable: "/usr/bin/crontab",
+        arguments: ["-l"],
+        environment: ["LC_ALL": "C"]
+      ))
+      guard verified.status == 0 else { return false }
+      return CronDocumentChecksum.checksum(verified.standardOutput)
+        == CronDocumentChecksum.checksum(document)
+    } catch {
+      return false
+    }
   }
 }

@@ -79,6 +79,36 @@ struct AutomationExecutorRouter: AutomationMutationApplying {
   }
 }
 
+final class CachedCrontabMutationProbe: @unchecked Sendable {
+  private let currentUsername: String
+  private let run: @Sendable (AutomationCommand) async throws -> AutomationCommandResult
+  private let lock = NSLock()
+  private var cached: Bool?
+
+  init(
+    currentUsername: String,
+    run: @escaping @Sendable (AutomationCommand) async throws -> AutomationCommandResult
+  ) {
+    self.currentUsername = currentUsername
+    self.run = run
+  }
+
+  func verified() async -> Bool {
+    if let cached = lock.withLock({ cached }) { return cached }
+    let value = await CrontabMutationProbe.verifyWriteReadback(
+      currentUsername: currentUsername,
+      run: run
+    )
+    lock.withLock { cached = value }
+    return value
+  }
+
+  /// Fail closed until an async probe has completed successfully.
+  func cachedFailClosed() -> Bool {
+    lock.withLock { cached ?? false }
+  }
+}
+
 actor AutomationRecoverableSourceProvider {
   private let runner: any AutomationCommandRunning
   private let fileSystem: any AutomationFileSystem
@@ -417,14 +447,36 @@ struct AutomationAuthorityCapabilityDecisionProvider:
   AutomationCapabilityDecisionProviding, Sendable
 {
   let authority: AutomationAuthorityContextBuilder
+  let crontabMutationVerified: @Sendable () async -> Bool
+
+  init(
+    authority: AutomationAuthorityContextBuilder,
+    crontabMutationVerified: @escaping @Sendable () async -> Bool = { true }
+  ) {
+    self.authority = authority
+    self.crontabMutationVerified = crontabMutationVerified
+  }
 
   func decisions(
     for records: [AutomationRecord]
   ) async -> [AutomationRecord.ID: AutomationCapabilityDecision] {
-    await Task.detached(priority: .utility) {
+    let needsCronProbe = records.contains { $0.sourceKind == .crontab && $0.ownership == .user }
+    let cronWritable = needsCronProbe ? await crontabMutationVerified() : true
+    return await Task.detached(priority: .utility) {
       Dictionary(uniqueKeysWithValues: records.map { record in
         do {
-          let context = try authority.context(for: record)
+          var context = try authority.context(for: record)
+          if record.sourceKind == .crontab {
+            context = AutomationCapabilityContext(
+              currentUID: context.currentUID,
+              canonicalPathIsApproved: context.canonicalPathIsApproved,
+              sourceOwnerUID: context.sourceOwnerUID,
+              isSymlink: context.isSymlink,
+              isManaged: context.isManaged,
+              implementedCapabilities: context.implementedCapabilities,
+              mutableSourceVerified: cronWritable
+            )
+          }
           return (record.id, AutomationCapabilityPolicy.decision(for: record, context: context))
         } catch {
           return (

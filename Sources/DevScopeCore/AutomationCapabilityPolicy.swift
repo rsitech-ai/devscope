@@ -46,6 +46,9 @@ public struct AutomationCapabilityContext: Equatable, Sendable {
   public let isSymlink: Bool
   public let isManaged: Bool
   public let implementedCapabilities: Set<AutomationCapability>
+  /// When false for crontab, mutation stays gated until write/readback is verified
+  /// (see `docs/release/0.1.0/SECURITY_STATUS.md` residual automation risk).
+  public let mutableSourceVerified: Bool
 
   public init(
     currentUID: uid_t,
@@ -53,7 +56,8 @@ public struct AutomationCapabilityContext: Equatable, Sendable {
     sourceOwnerUID: uid_t?,
     isSymlink: Bool,
     isManaged: Bool,
-    implementedCapabilities: Set<AutomationCapability> = []
+    implementedCapabilities: Set<AutomationCapability> = [],
+    mutableSourceVerified: Bool = true
   ) {
     self.currentUID = currentUID
     self.canonicalPathIsApproved = canonicalPathIsApproved
@@ -61,6 +65,7 @@ public struct AutomationCapabilityContext: Equatable, Sendable {
     self.isSymlink = isSymlink
     self.isManaged = isManaged
     self.implementedCapabilities = implementedCapabilities
+    self.mutableSourceVerified = mutableSourceVerified
   }
 }
 
@@ -118,6 +123,15 @@ public enum AutomationCapabilityPolicy {
       return denied(
         "DevScope could not verify this LaunchAgent's enabled and loaded state, so management is unavailable.",
         context: context
+      )
+    }
+    if record.sourceKind == .crontab, !context.mutableSourceVerified {
+      let readRunCapabilities: Set<AutomationCapability> = [
+        .exportRecord, .startNow, .stopCurrentRun,
+      ]
+      return AutomationCapabilityDecision(
+        capabilities: readRunCapabilities.intersection(context.implementedCapabilities),
+        reason: "Current-user crontab write/readback could not be verified on this Mac."
       )
     }
 
