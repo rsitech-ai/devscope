@@ -16,8 +16,16 @@ public enum AutomationPathAuthorization {
       ? destination
       : destination.deletingLastPathComponent().standardizedFileURL
     return !metadataIsSymbolicLink
-      && destination.path.hasPrefix(root.path + "/")
+      && isPath(destination.path, underApprovedRoot: root.path)
       && verifiedMetadataURL.path == expectedMetadataURL.path
+  }
+
+  /// Fail closed for filesystem root: `"/"` + `"/"` must not become `"//"`.
+  static func isPath(_ destinationPath: String, underApprovedRoot rootPath: String) -> Bool {
+    if rootPath == "/" {
+      return destinationPath.hasPrefix("/") && destinationPath != "/"
+    }
+    return destinationPath.hasPrefix(rootPath + "/")
   }
 }
 

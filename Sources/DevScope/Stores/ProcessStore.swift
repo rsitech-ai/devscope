@@ -286,7 +286,12 @@ final class ProcessStore: ObservableObject {
   }
 
   func familySummary(for process: DevProcess) -> ProcessFamilySummary {
-    ProcessPresentation.familySummary(for: process, in: processes)
+    let live = ProcessPresentation.liveScopedTreeInputs(
+      processes: processes,
+      classifiedProcesses: classifiedProcesses,
+      liveProcessIDs: liveProcessIDs
+    )
+    return ProcessPresentation.familySummary(for: process, in: live.processes)
   }
 
   func isProcessLive(pid: Int32) -> Bool {
@@ -412,10 +417,15 @@ final class ProcessStore: ObservableObject {
   func terminateTree(root item: ClassifiedDevProcess) {
     guard allowSignal(item) else { return }
     do {
-      let targets = try killer.terminateTree(
-        root: item,
+      let live = ProcessPresentation.liveScopedTreeInputs(
         processes: processes,
         classifiedProcesses: classifiedProcesses,
+        liveProcessIDs: liveProcessIDs
+      )
+      let targets = try killer.terminateTree(
+        root: item,
+        processes: live.processes,
+        classifiedProcesses: live.classifiedProcesses,
         currentProcessID: Int32(ProcessInfo.processInfo.processIdentifier)
       )
       statusMessage = "Sent TERM to \(targets.count) processes"
@@ -434,10 +444,15 @@ final class ProcessStore: ObservableObject {
   func forceTerminateTree(root item: ClassifiedDevProcess) {
     guard allowSignal(item) else { return }
     do {
-      let targets = try killer.forceTerminateTree(
-        root: item,
+      let live = ProcessPresentation.liveScopedTreeInputs(
         processes: processes,
         classifiedProcesses: classifiedProcesses,
+        liveProcessIDs: liveProcessIDs
+      )
+      let targets = try killer.forceTerminateTree(
+        root: item,
+        processes: live.processes,
+        classifiedProcesses: live.classifiedProcesses,
         currentProcessID: Int32(ProcessInfo.processInfo.processIdentifier)
       )
       statusMessage = "Sent KILL to \(targets.count) processes"

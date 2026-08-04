@@ -29,6 +29,28 @@ final class AutomationCapabilityPolicyTests: XCTestCase {
     ))
   }
 
+  func testFilesystemRootApprovedPathDoesNotUseDoubleSlashPrefix() {
+    let root = URL(fileURLWithPath: "/")
+    let destination = URL(fileURLWithPath: "/Users/test/Library/LaunchAgents/com.example.plist")
+
+    XCTAssertTrue(AutomationPathAuthorization.isApprovedDestination(
+      destination,
+      approvedRoot: root,
+      destinationExists: true,
+      verifiedMetadataURL: destination,
+      metadataIsSymbolicLink: false
+    ))
+    XCTAssertFalse(AutomationPathAuthorization.isApprovedDestination(
+      root,
+      approvedRoot: root,
+      destinationExists: true,
+      verifiedMetadataURL: root,
+      metadataIsSymbolicLink: false
+    ))
+    XCTAssertTrue(AutomationPathAuthorization.isPath("/tmp/a", underApprovedRoot: "/"))
+    XCTAssertFalse(AutomationPathAuthorization.isPath("/", underApprovedRoot: "/"))
+  }
+
   func testCurrentUserLaunchAgentReceivesFullCapabilities() {
     let decision = AutomationCapabilityPolicy.decision(
       for: Fixtures.userAgent,

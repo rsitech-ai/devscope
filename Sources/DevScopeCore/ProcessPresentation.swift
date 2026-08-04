@@ -293,6 +293,19 @@ public enum ProcessPresentation {
     )
   }
 
+  /// Snapshot stabilizers keep exited PIDs briefly for UI continuity. Tree signals and
+  /// family counts must use live rows only, or ProcessKiller fails closed on ghosts.
+  public static func liveScopedTreeInputs(
+    processes: [DevProcess],
+    classifiedProcesses: [ClassifiedDevProcess],
+    liveProcessIDs: Set<Int32>
+  ) -> (processes: [DevProcess], classifiedProcesses: [ClassifiedDevProcess]) {
+    (
+      processes.filter { liveProcessIDs.contains($0.pid) },
+      classifiedProcesses.filter { liveProcessIDs.contains($0.process.pid) }
+    )
+  }
+
   public static func searchableText(for item: ClassifiedDevProcess) -> String {
     [
       item.classification.displayName,
