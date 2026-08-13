@@ -968,9 +968,9 @@ final class ReleaseScriptTests: XCTestCase {
     let source = try appSource(at: ".github/workflows/release-gates.yml")
 
     XCTAssertTrue(
-      source.contains("actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd")
+      source.contains("actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1")
     )
-    XCTAssertFalse(source.contains("actions/checkout@v6"))
+    XCTAssertFalse(source.contains("actions/checkout@v7"))
   }
 
   func testOpenSourceReadinessCheckerRejectsRepositoryWithoutLicense() throws {
