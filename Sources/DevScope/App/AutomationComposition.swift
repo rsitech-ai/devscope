@@ -67,7 +67,9 @@ enum DevScopeComposition {
         fileSystem: fileSystem,
         currentUID: currentUID,
         processSnapshot: {
-          try processScanner.snapshot(includeCurrentDirectories: false)
+          try await BlockingSystemWork.run {
+            try processScanner.snapshot(includeCurrentDirectories: false)
+          }
         }
       ),
       legacy: LegacyLoginItemAutomationExecutor(
@@ -132,7 +134,9 @@ enum DevScopeComposition {
         await inventoryService.refreshAfterCurrent()
       },
       refreshProcesses: {
-        try processScanner.snapshot(includeCurrentDirectories: false)
+        try await BlockingSystemWork.run {
+          try processScanner.snapshot(includeCurrentDirectories: false)
+        }
       },
       backupDirectory: recoveryRoot,
       currentUID: currentUID

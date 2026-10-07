@@ -21,9 +21,6 @@ struct ProcessMetricHistoryView: View {
       HStack(spacing: 12) {
         LegendSwatch(color: .cyan, label: "CPU")
         LegendSwatch(color: .purple, label: "Memory")
-        if hasGPUSamples {
-          LegendSwatch(color: .orange, label: "GPU")
-        }
         Spacer()
         Text(summaryText)
           .font(.caption.monospacedDigit())
@@ -52,11 +49,7 @@ struct ProcessMetricHistoryView: View {
     }
 
     return
-      "\(ProcessMetricFormat.cpu(latest.cpuPercent)) · \(ProcessMetricFormat.memory(latest.residentMemoryBytes)) · GPU \(ProcessMetricFormat.gpu(latest.gpuPercent))"
-  }
-
-  private var hasGPUSamples: Bool {
-    samples.contains { $0.gpuPercent != nil }
+      "\(ProcessMetricFormat.cpu(latest.cpuPercent)) · \(ProcessMetricFormat.memory(latest.residentMemoryBytes))"
   }
 }
 
@@ -88,14 +81,6 @@ private struct MetricChart: View {
         style: StrokeStyle(lineWidth: 2.2, lineCap: .round, lineJoin: .round)
       )
 
-      let gpuValues = samples.compactMap(\.gpuPercent)
-      if gpuValues.count == samples.count {
-        context.stroke(
-          path(for: gpuValues, maxValue: 100, in: rect),
-          with: .color(.orange),
-          style: StrokeStyle(lineWidth: 2.2, lineCap: .round, lineJoin: .round)
-        )
-      }
     }
     .background(
       .quaternary.opacity(0.24), in: RoundedRectangle(cornerRadius: 10, style: .continuous)

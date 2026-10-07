@@ -173,11 +173,11 @@ final class ProcessStore: ObservableObject {
         if includeCurrentDirectories {
           await snapshotWorker.invalidateWorkspaceFacts()
         }
-        let scanResult = try await Task.detached(priority: .userInitiated) {
+        let scanResult = try await BlockingSystemWork.run {
           let processes = try scanner.snapshot(includeCurrentDirectories: includeCurrentDirectories)
           let gpuMetric = includeGPUMetric ? try? gpuMetricProvider.snapshot() : nil
           return (processes: processes, gpuMetric: gpuMetric)
-        }.value
+        }
         if includeGPUMetric {
           cachedGPUMetric = scanResult.gpuMetric
           lastGPUMetricRefresh = Date()

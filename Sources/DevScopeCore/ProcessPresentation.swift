@@ -376,13 +376,17 @@ public enum ProcessPresentation {
   }
 
   public static func identityKeys(for item: ClassifiedDevProcess) -> Set<String> {
+    let primary = identityKey(for: item)
+    guard let directory = item.process.currentDirectory, !directory.isEmpty else {
+      return [primary]
+    }
     let fallback = hashedIdentityKey(
       executableName: item.process.executableName,
       currentDirectory: "",
       command: item.process.command
     )
 
-    return [identityKey(for: item), fallback]
+    return [primary, fallback]
   }
 
   private static func hashedIdentityKey(
@@ -398,9 +402,14 @@ public enum ProcessPresentation {
 
   private static func hashedIdentityKey(source: String) -> String {
     let digest = SHA256.hash(data: Data(source.utf8))
-      .map { String(format: "%02x", $0) }
-      .joined()
-    return "v2:\(digest)"
+    let alphabet = Array("0123456789abcdef".utf8)
+    var encoded = Array("v2:".utf8)
+    encoded.reserveCapacity(67)
+    for byte in digest {
+      encoded.append(alphabet[Int(byte >> 4)])
+      encoded.append(alphabet[Int(byte & 0x0f)])
+    }
+    return String(decoding: encoded, as: UTF8.self)
   }
 
   public static func isSaved(_ item: ClassifiedDevProcess, in keys: Set<String>) -> Bool {
@@ -469,7 +478,10 @@ public enum ProcessPresentation {
     guard let hours, hours >= 0, hours < 24 else {
       return -1
     }
-    return days * 86_400 + hours * 3_600 + minutes * 60 + seconds
+    let daySeconds = days * 86_400
+    let timeSeconds = hours * 3_600 + minutes * 60 + seconds
+    guard daySeconds <= Int64.max - timeSeconds else { return -1 }
+    return daySeconds + timeSeconds
   }
 
   public static func redactedCommand(_ command: String) -> String {

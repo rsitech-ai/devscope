@@ -469,22 +469,22 @@ struct SettingsView: View {
     let isSandboxed = ProcessAccessStatus.isSandboxed
     isCheckingAccess = true
     Task { @MainActor in
-      accessAssessment = await Task.detached(priority: .userInitiated) {
-        do {
+      do {
+        accessAssessment = try await BlockingSystemWork.run {
           let processes = try SystemProcessScanner().snapshot(includeCurrentDirectories: true)
           return ProcessAccessAssessment.assess(
             isSandboxed: isSandboxed,
             processes: processes,
             errorDescription: nil
           )
-        } catch {
-          return ProcessAccessAssessment.assess(
-            isSandboxed: isSandboxed,
-            processes: nil,
-            errorDescription: error.localizedDescription
-          )
         }
-      }.value
+      } catch {
+        accessAssessment = ProcessAccessAssessment.assess(
+          isSandboxed: isSandboxed,
+          processes: nil,
+          errorDescription: error.localizedDescription
+        )
+      }
       isCheckingAccess = false
     }
   }

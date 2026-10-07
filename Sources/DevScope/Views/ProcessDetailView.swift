@@ -75,7 +75,6 @@ struct ProcessDetailView: View {
                       process.process.resourceUsage?.residentMemoryBytes))
                   DetailChip(label: "Mem Avg", value: ProcessMetricFormat.memory(averageMemory))
                   DetailChip(label: "Mem Peak", value: ProcessMetricFormat.memory(peakMemory))
-                  DetailChip(label: "GPU", value: ProcessMetricFormat.gpu(latestGPU))
                   DetailChip(
                     label: "Running", value: process.process.resourceUsage?.elapsedTime ?? "-")
                   DetailChip(label: "Samples", value: "\(metricHistory.count)")
@@ -190,10 +189,6 @@ struct ProcessDetailView: View {
       .map(String.init)
   }
 
-  private var latestGPU: Double? {
-    metricHistory.last { $0.gpuPercent != nil }?.gpuPercent
-  }
-
   private var averageCPU: Double? {
     average(metricHistory.map(\.cpuPercent))
   }
@@ -252,7 +247,7 @@ private struct EmptyProcessInspector: View {
       VStack(alignment: .leading, spacing: 8) {
         EmptyInspectorLine(
           symbolName: "gauge.with.dots.needle.67percent", title: "Resources",
-          detail: "CPU, memory, GPU sample, peaks, averages, and sample count")
+          detail: "Process CPU and memory, peaks, averages, and sample count")
         EmptyInspectorLine(
           symbolName: "point.3.connected.trianglepath.dotted", title: "Tree",
           detail: "Parent, children, and retained ended-process state")
