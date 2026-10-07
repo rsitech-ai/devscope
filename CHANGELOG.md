@@ -13,6 +13,8 @@ All notable changes to DevScope are documented here. The format follows
 - Favorites and watch matching use direct SHA-256 hex encoding and lexical
   executable names, preserving existing saved keys without filesystem probes.
 - Activity counts stay on one line when the process inventory exceeds 999 items.
+- Access Settings show Checking during a scan, withholding stale requirement
+  guidance and diagnostics until the assessment finishes.
 
 ### Fixed
 
