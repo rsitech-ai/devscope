@@ -37,7 +37,6 @@ for architecture in $ARCHITECTURES; do
   BUILD_ARGS=(
     -c release
     --arch "$architecture"
-    --build-system native
     --scratch-path "$scratchPath"
   )
   swift build "${BUILD_ARGS[@]}" >&2

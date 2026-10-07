@@ -43,7 +43,7 @@ final class SystemAutomationCommandRunnerTests: XCTestCase {
       ))
       XCTFail("Expected outputLimitExceeded")
     } catch SystemAutomationCommandError.outputLimitExceeded {
-      // Expected only after the output pipe reaches EOF.
+      // Output is drained after the oversized command is terminated.
     } catch {
       XCTFail("Expected outputLimitExceeded, received \(error)")
     }
@@ -77,6 +77,34 @@ final class SystemAutomationCommandRunnerTests: XCTestCase {
       XCTFail("Expected executionTimedOut, received \(error)")
     }
 
+    XCTAssertLessThan(ContinuousClock.now - started, .seconds(4))
+    await assertProcessGone(processGroup.value)
+  }
+
+  func testUnendingOutputIsStoppedAtTheCaptureLimitBeforeExecutionTimeout() async throws {
+    let processGroup = LockedValue<pid_t?>(nil)
+    let runner = SystemAutomationCommandRunner(
+      hooks: .init(afterSpawnBeforeInstall: { processGroup.set($0) }),
+      maximumCapturedBytes: 64,
+      executionTimeout: .seconds(10)
+    )
+    let fallback = cleanupFallback(processGroup)
+    defer {
+      fallback.cancel()
+      killGroupIfPresent(processGroup.value)
+    }
+    let started = ContinuousClock.now
+    do {
+      _ = try await runner.run(AutomationCommand(
+        executable: "/bin/sh",
+        arguments: ["-c", "trap '' TERM; while :; do printf '1234567890'; done"]
+      ))
+      XCTFail("Expected outputLimitExceeded")
+    } catch SystemAutomationCommandError.outputLimitExceeded {
+      // The capture limit, rather than the ten-second deadline, stopped the job.
+    } catch {
+      XCTFail("Expected outputLimitExceeded, received \(error)")
+    }
     XCTAssertLessThan(ContinuousClock.now - started, .seconds(4))
     await assertProcessGone(processGroup.value)
   }

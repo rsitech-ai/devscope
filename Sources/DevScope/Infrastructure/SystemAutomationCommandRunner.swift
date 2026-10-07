@@ -61,7 +61,7 @@ private final class AutomationChildProcessController: @unchecked Sendable {
       guard escalationTask == nil else { return }
       terminate(group, signal: SIGTERM)
       escalationTask = Task.detached {
-      try? await Task.sleep(for: .seconds(2))
+        try? await Task.sleep(for: .seconds(2))
         guard !Task.isCancelled else { return }
         _ = Darwin.kill(-group, SIGKILL)
       }
@@ -111,7 +111,8 @@ actor SystemAutomationCommandRunner: AutomationCommandRunning {
         try await Self.performBlocking {
           try Self.drain(
             spawned.standardOutput,
-            maximumCapturedBytes: self.maximumCapturedBytes
+            maximumCapturedBytes: self.maximumCapturedBytes,
+            onLimitExceeded: { controller.cancel() }
           )
         }
       }
@@ -119,7 +120,8 @@ actor SystemAutomationCommandRunner: AutomationCommandRunning {
         try await Self.performBlocking {
           try Self.drain(
             spawned.standardError,
-            maximumCapturedBytes: self.maximumCapturedBytes
+            maximumCapturedBytes: self.maximumCapturedBytes,
+            onLimitExceeded: { controller.cancel() }
           )
         }
       }
@@ -333,7 +335,8 @@ actor SystemAutomationCommandRunner: AutomationCommandRunning {
 
   nonisolated private static func drain(
     _ handle: FileHandle,
-    maximumCapturedBytes: Int
+    maximumCapturedBytes: Int,
+    onLimitExceeded: @Sendable () -> Void
   ) throws -> Data {
     defer { try? handle.close() }
     var captured = Data()
@@ -343,7 +346,10 @@ actor SystemAutomationCommandRunner: AutomationCommandRunning {
       if available > 0 {
         captured.append(chunk.prefix(available))
       }
-      if chunk.count > available { exceededLimit = true }
+      if chunk.count > available, !exceededLimit {
+        exceededLimit = true
+        onLimitExceeded()
+      }
     }
     if exceededLimit { throw SystemAutomationCommandError.outputLimitExceeded }
     return captured

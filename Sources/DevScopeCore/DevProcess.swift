@@ -51,7 +51,10 @@ public struct DevProcess: Identifiable, Equatable, Hashable, Sendable {
   }
 
   public var executableName: String {
-    URL(fileURLWithPath: executable).lastPathComponent
+    // This is a lexical process fact. Constructing a file URL probes the file
+    // system (and resolves relative paths) on every row/filter evaluation.
+    executable.split(separator: "/", omittingEmptySubsequences: true).last.map(String.init)
+      ?? executable
   }
 }
 

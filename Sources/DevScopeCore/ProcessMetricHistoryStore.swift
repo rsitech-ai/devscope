@@ -16,7 +16,7 @@ public struct ProcessMetricHistoryStore: Sendable {
 
   public mutating func record(
     processes: [DevProcess],
-    gpuMetric: DevGPUMetric?,
+    gpuMetric _: DevGPUMetric?,
     timestamp: Date
   ) {
     let activeProcessIDs = Set(processes.map(\.pid))
@@ -40,7 +40,8 @@ public struct ProcessMetricHistoryStore: Sendable {
           timestamp: timestamp,
           cpuPercent: usage.cpuPercent,
           residentMemoryBytes: usage.residentMemoryBytes,
-          gpuPercent: gpuMetric?.utilizationPercent
+          // IORegistry reports machine utilization, not usage by this process.
+          gpuPercent: nil
         )
       )
       let overflow = (entries[process.pid]?.samples.count ?? 0) - limit

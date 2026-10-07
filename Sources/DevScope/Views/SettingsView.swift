@@ -38,6 +38,7 @@ struct SettingsView: View {
     errorDescription: nil
   )
   @State private var isCheckingAccess = false
+  @State private var hasCheckedAccess = false
 
   var body: some View {
     TabView {
@@ -140,7 +141,7 @@ struct SettingsView: View {
 
             Divider()
 
-            ForEach(accessAssessment.requirements, id: \.kind) { requirement in
+            ForEach(isAccessAssessmentPending ? [] : accessAssessment.requirements, id: \.kind) { requirement in
               AccessRequirementRow(requirement: requirement) { action in
                 performAccessAction(action)
               }
@@ -265,6 +266,7 @@ struct SettingsView: View {
               }
               .accessibilityLabel("Copy access diagnostics")
               .accessibilityHint("Copies DevScope access and sandbox diagnostics to the clipboard.")
+              .disabled(isAccessAssessmentPending)
             }
           }
 
@@ -435,7 +437,11 @@ struct SettingsView: View {
   }
 
   private var accessSummary: ProcessAccessSummary {
-    ProcessAccessSummary(assessment: accessAssessment)
+    ProcessAccessSummary(assessment: accessAssessment, isChecking: isAccessAssessmentPending)
+  }
+
+  private var isAccessAssessmentPending: Bool {
+    !hasCheckedAccess || isCheckingAccess
   }
 
   private var neededAccessActions: [ProcessAccessAction] {
@@ -458,7 +464,8 @@ struct SettingsView: View {
   }
 
   private var shouldShowFullDiskAccessGuidance: Bool {
-    ProcessAccessStatus.isSandboxed || neededAccessActions.contains(.fullDiskAccess)
+    !isAccessAssessmentPending
+      && (ProcessAccessStatus.isSandboxed || neededAccessActions.contains(.fullDiskAccess))
   }
 
   private func refreshAccessAssessment() {
@@ -469,22 +476,23 @@ struct SettingsView: View {
     let isSandboxed = ProcessAccessStatus.isSandboxed
     isCheckingAccess = true
     Task { @MainActor in
-      accessAssessment = await Task.detached(priority: .userInitiated) {
-        do {
+      do {
+        accessAssessment = try await BlockingSystemWork.run {
           let processes = try SystemProcessScanner().snapshot(includeCurrentDirectories: true)
           return ProcessAccessAssessment.assess(
             isSandboxed: isSandboxed,
             processes: processes,
             errorDescription: nil
           )
-        } catch {
-          return ProcessAccessAssessment.assess(
-            isSandboxed: isSandboxed,
-            processes: nil,
-            errorDescription: error.localizedDescription
-          )
         }
-      }.value
+      } catch {
+        accessAssessment = ProcessAccessAssessment.assess(
+          isSandboxed: isSandboxed,
+          processes: nil,
+          errorDescription: error.localizedDescription
+        )
+      }
+      hasCheckedAccess = true
       isCheckingAccess = false
     }
   }
@@ -608,8 +616,14 @@ private struct ProcessAccessSummary {
   let symbolName: String
   let tint: Color
 
-  init(assessment: ProcessAccessAssessment) {
-    if assessment.hasBlockedRequirement {
+  init(assessment: ProcessAccessAssessment, isChecking: Bool) {
+    if isChecking {
+      title = "Checking process access"
+      badge = "Checking"
+      message = "Inspecting current process metadata and working-directory access."
+      symbolName = "arrow.clockwise"
+      tint = .secondary
+    } else if assessment.hasBlockedRequirement {
       title = "Process access blocked"
       badge = "Blocked"
       message =

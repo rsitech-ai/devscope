@@ -128,6 +128,18 @@ final class ProcessClassifierTests: XCTestCase {
     XCTAssertEqual(process.resourceUsage?.elapsedTime, "01:02:03")
   }
 
+  func testRejectsUnsafePSResourceMetricsAndProcessIdentifiers() {
+    for cpu in ["nan", "inf", "-1"] {
+      XCTAssertNil(ProcessScanner.parsePSLine("4312 112 \(cpu) 64 00:10 node node server.js"))
+    }
+    for memory in ["-1", "9223372036854775807"] {
+      XCTAssertNil(ProcessScanner.parsePSLine("4312 112 1 \(memory) 00:10 node node server.js"))
+    }
+    XCTAssertNil(ProcessScanner.parsePSLine("-1 112 node node server.js"))
+    XCTAssertNil(ProcessScanner.parsePSLine("4312 -1 node node server.js"))
+    XCTAssertNotNil(ProcessScanner.parsePSLine("4312 112 200 64 00:10 node node server.js"))
+  }
+
   func testClassifiesExpectedDevProcesses() throws {
     let samples: [(String, DevRuntimeKind)] = [
       ("node ./node_modules/.bin/next dev --port 3014", .javascript),

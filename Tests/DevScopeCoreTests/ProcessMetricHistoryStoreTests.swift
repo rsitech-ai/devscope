@@ -16,7 +16,7 @@ final class ProcessMetricHistoryStoreTests: XCTestCase {
     XCTAssertEqual(sample.timestamp, timestamp)
     XCTAssertEqual(sample.cpuPercent, 12)
     XCTAssertEqual(sample.residentMemoryBytes, 256)
-    XCTAssertEqual(sample.gpuPercent, 34)
+    XCTAssertNil(sample.gpuPercent, "Machine GPU utilization must not be attributed to a process")
   }
 
   func testCapsEachProcessHistoryAtTheConfiguredLimit() {

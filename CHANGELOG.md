@@ -8,6 +8,27 @@ All notable changes to DevScope are documented here. The format follows
 
 ### Changed
 
+- Process inspectors show process CPU and memory; machine-wide GPU utilization
+  remains in the system activity dashboard.
+- Favorites and watch matching use direct SHA-256 hex encoding and lexical
+  executable names, preserving existing saved keys without filesystem probes.
+- Activity counts stay on one line when the process inventory exceeds 999 items.
+- Access Settings show Checking during a scan, withholding stale requirement
+  guidance and diagnostics until the assessment finishes.
+
+### Fixed
+
+- Blocking process scans run on dispatch workers in live refresh, access checks,
+  and automation verification instead of occupying Swift cooperative workers.
+- Oversized automation-command output triggers process-group termination while
+  both streams are drained, rather than waiting for the execution deadline.
+- Process metrics reject negative and non-finite values and unsafe RSS conversion;
+  elapsed-time parsing rejects totals that exceed `Int64`.
+- Release builds use SwiftPM's default build system without the deprecated
+  forced-native option on Swift 6.4.
+
+### Documentation
+
 - Recorded Rafal Sikora as copyright owner and RSI Tech as the public
   maintainer, with `rsitech.ai` and `info@rsitech.ai` as the project routes.
 - Updated release evidence to distinguish the installed Developer ID identity

@@ -1390,7 +1390,9 @@ private struct RuntimeRailItem: View {
           .font(.caption2.monospacedDigit().weight(.semibold))
           .foregroundStyle(isSelected ? .primary : .tertiary)
           .contentTransition(.numericText())
-          .frame(width: 22, alignment: .trailing)
+          .lineLimit(1)
+          .fixedSize(horizontal: true, vertical: false)
+          .frame(minWidth: 22, alignment: .trailing)
       }
     }
     .padding(.horizontal, isCollapsed ? 5 : 7)

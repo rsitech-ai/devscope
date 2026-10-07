@@ -124,6 +124,28 @@ final class ProcessPresentationTests: XCTestCase {
     XCTAssertFalse(key.contains("/Users/example"))
   }
 
+  func testSavedIdentityEncodingPreservesExistingSHA256Keys() {
+    let item = ClassifiedDevProcess(
+      process: DevProcess(pid: 98, parentPID: 1, executable: "node", command: "node server.js"),
+      classification: DevProcessClassification(
+        kind: .javascript, displayName: "node", projectHint: nil, tags: []
+      )
+    )
+    let key = "v2:61259ad0ca5a8ffcf8425a8a053d94b1b15f77eb6a092324fd537ffe1eef5e57"
+    XCTAssertEqual(ProcessPresentation.identityKey(for: item), key)
+    XCTAssertEqual(ProcessPresentation.identityKeys(for: item), [key])
+  }
+
+  func testExecutableNameIsLexicalForRelativeAbsoluteAndEmptyPaths() {
+    for (path, expected) in [
+      ("node", "node"), ("./node", "node"),
+      ("/Applications/Example App.app/Contents/MacOS/Example App", "Example App"),
+      ("/usr/bin/node/", "node"), ("/", "/"), ("", ""),
+    ] {
+      XCTAssertEqual(DevProcess(pid: 98, parentPID: 1, executable: path, command: path).executableName, expected)
+    }
+  }
+
   func testSanitizedSavedIdentityKeysMigrateLegacyValuesWithoutRetainingRawData() {
     let safeKey = "v2:" + String(repeating: "a", count: 64)
     let legacyKey =
@@ -553,6 +575,8 @@ final class ProcessPresentationTests: XCTestCase {
   }
 
   func testParsesElapsedTimeForChronologicalTableSorting() {
+    XCTAssertEqual(ProcessPresentation.elapsedSeconds("106751991167300-23:59:59"), -1)
+    XCTAssertEqual(ProcessPresentation.elapsedSeconds("106751991167300-15:30:07"), Int64.max)
     XCTAssertEqual(ProcessPresentation.elapsedSeconds("00:42"), 42)
     XCTAssertEqual(ProcessPresentation.elapsedSeconds("02:03:04"), 7_384)
     XCTAssertEqual(ProcessPresentation.elapsedSeconds("9-00:00:00"), 777_600)

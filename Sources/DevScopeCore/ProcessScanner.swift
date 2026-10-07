@@ -150,13 +150,19 @@ public enum ProcessScanner {
     let parts = trimmed.split(separator: " ", maxSplits: 6, omittingEmptySubsequences: true)
     guard parts.count >= 3,
           let pid = Int32(parts[0]),
-          let parentPID = Int32(parts[1]) else {
+          let parentPID = Int32(parts[1]),
+          pid > 0, parentPID >= 0 else {
       return nil
     }
 
     if parts.count >= 6,
        let cpuPercent = Double(parts[2]),
        let residentMemoryKilobytes = Int64(parts[3]) {
+      guard cpuPercent.isFinite, cpuPercent >= 0,
+            residentMemoryKilobytes >= 0,
+            residentMemoryKilobytes <= Int64.max / 1024 else {
+        return nil
+      }
       let elapsedTime = String(parts[4])
       let executable = String(parts[5])
       let command = parts.count == 7 ? String(parts[6]) : executable
